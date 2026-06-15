@@ -138,11 +138,12 @@ def make_stc(path):
     wb = Workbook()
     stats = wb.active
     stats.title = "统计"
-    report = wb.create_sheet("缺陷记录&测试报告")
+    cases = wb.create_sheet("测试用例")
+    wb.create_sheet("缺陷记录&测试报告")
     headers = ["测试用例编号", "用例类型", "测试项", "测试用例标题", "重要级别", "预置条件",
                "输入", "操作步骤", "预期结果", "用例执行情况", "备注"]
-    report.append(headers)
-    for cell in report[1]:
+    cases.append(headers)
+    for cell in cases[1]:
         cell.font = Font(bold=True)
         cell.fill = PatternFill("solid", fgColor="D9EAF7")
     stats.append(["统计项", "数量"])
