@@ -3,15 +3,86 @@
 import argparse
 import json
 import re
+import shutil
 from collections import Counter
 from pathlib import Path
 
 from docxtpl import DocxTemplate
 from openpyxl import load_workbook
 
+CASE_TYPES = {
+    "功能用例", "异常用例", "性能用例", "安全用例", "可靠性用例", "兼容性用例",
+    "满规格", "时序", "资源回收", "并发", "边界校验",
+}
+PRIORITIES = {"H", "M", "L"}
+
 
 def clean(value):
     return "" if value is None else str(value).strip()
+
+
+def validate_data(data):
+    """Reject structurally ambiguous input before rendering any document."""
+    errors = []
+    if not isinstance(data, dict):
+        raise ValueError("input root must be a JSON object")
+
+    for key in ("iteration_name", "iteration_code"):
+        if not clean(data.get(key)):
+            errors.append(f"{key}: required non-empty string")
+
+    for section_name in ("srs", "sd"):
+        section = data.get(section_name)
+        if not isinstance(section, dict):
+            errors.append(f"{section_name}: required object")
+
+    requirements = data.get("requirements")
+    if not isinstance(requirements, list) or not requirements:
+        errors.append("requirements: required non-empty array")
+        requirements = []
+    for index, requirement in enumerate(requirements):
+        path = f"requirements[{index}]"
+        if not isinstance(requirement, dict):
+            errors.append(f"{path}: must be an object")
+            continue
+        for key in ("title", "ar"):
+            if not clean(requirement.get(key)):
+                errors.append(f"{path}.{key}: required non-empty string")
+        cases = requirement.get("test_cases", [])
+        if not isinstance(cases, list):
+            errors.append(f"{path}.test_cases: must be an array")
+            continue
+        for case_index, case in enumerate(cases):
+            case_path = f"{path}.test_cases[{case_index}]"
+            if not isinstance(case, dict):
+                errors.append(f"{case_path}: must be an object")
+                continue
+            for key in ("id", "type", "item", "title", "priority", "precondition",
+                        "input", "steps", "expected"):
+                if not clean(case.get(key)):
+                    errors.append(f"{case_path}.{key}: required non-empty string")
+            case_type = clean(case.get("type"))
+            if case_type and case_type not in CASE_TYPES:
+                errors.append(f"{case_path}.type: unsupported value {case_type!r}")
+            priority = clean(case.get("priority"))
+            if priority and priority not in PRIORITIES:
+                errors.append(f"{case_path}.priority: expected H, M, or L")
+
+    revisions = data.get("revisions")
+    if not isinstance(revisions, list):
+        errors.append("revisions: required array")
+    else:
+        for index, revision in enumerate(revisions):
+            path = f"revisions[{index}]"
+            if not isinstance(revision, dict):
+                errors.append(f"{path}: must be an object")
+                continue
+            for key in ("date", "version", "description", "author"):
+                if not clean(revision.get(key)):
+                    errors.append(f"{path}.{key}: required non-empty string")
+
+    if errors:
+        raise ValueError("invalid input:\n- " + "\n- ".join(errors))
 
 
 def context(data, kind):
@@ -51,7 +122,8 @@ def context(data, kind):
 
 
 def render_docx(template, output, values):
-    doc = DocxTemplate(template)
+    shutil.copy2(template, output)
+    doc = DocxTemplate(output)
     doc.render(values, autoescape=True)
     doc.save(output)
 
@@ -61,7 +133,8 @@ def safe_filename(value):
 
 
 def populate_stc(template, output, data):
-    wb = load_workbook(template)
+    shutil.copy2(template, output)
+    wb = load_workbook(output)
     required = {"统计", "缺陷记录&测试报告"}
     missing = required.difference(wb.sheetnames)
     if missing:
@@ -101,9 +174,18 @@ def main():
     parser.add_argument("--srs-template", required=True, type=Path)
     parser.add_argument("--sd-template", required=True, type=Path)
     parser.add_argument("--stc-template", required=True, type=Path)
-    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--output-dir", default=Path("result"), type=Path)
     args = parser.parse_args()
     data = json.loads(args.input.read_text(encoding="utf-8"))
+    validate_data(data)
+    output_dir = args.output_dir.resolve()
+    template_dirs = {
+        args.srs_template.resolve().parent,
+        args.sd_template.resolve().parent,
+        args.stc_template.resolve().parent,
+    }
+    if output_dir in template_dirs:
+        raise ValueError("output directory must not be a template/assets directory; use result/")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stem = safe_filename(clean(data.get("iteration_code")) or clean(data.get("iteration_name")))
     outputs = {

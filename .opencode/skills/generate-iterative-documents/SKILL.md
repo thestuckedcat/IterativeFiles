@@ -23,9 +23,10 @@ metadata:
 ## OpenCode tool usage
 
 1. 先用 `glob` 定位当前已加载 skill 的 `SKILL.md`，其目录记为 `SKILL_DIR`。项目安装的标准位置是 `.opencode/skills/generate-iterative-documents`。
-2. 用 `read` 按需读取：
-   - `$SKILL_DIR/references/brainstorming.md`
+2. 开始提问前必须用 `read` 读取字段语义契约，再按需读取其他资料：
    - `$SKILL_DIR/references/template-fields.md`
+   - `$SKILL_DIR/references/docx-template-example.md`（创建或迁移正式 DOCX 模板时读取）
+   - `$SKILL_DIR/references/brainstorming.md`
    - `$SKILL_DIR/references/input-schema.json`
 3. 需要用户决策时调用 OpenCode 的 `question` 工具。每次只问一个主题；不要在普通文本中一次列出整套问卷。
 4. 每个允许缺省的问题提供：
@@ -39,11 +40,11 @@ metadata:
 
 1. 按 `references/brainstorming.md` 的阶段顺序提问。先询问迭代名，再逐个 AR 深挖；确认没有更多 AR 后才反向总结简介。
 2. 每轮复述已确认内容，并只提出当前最关键的一个问题。用户已提供的信息不要重复询问。
-3. 将确认内容整理成 `references/input-schema.json` 所示结构。保留用户原意，不臆造 API、参数、芯片行为、错误码或期望结果。
+3. 按 `references/template-fields.md` 的“JSON 路径 → 模板变量”契约逐字段整理成 `references/input-schema.json` 所示结构。保留用户原意，不臆造 API、参数、芯片行为、错误码或期望结果。
 4. 选择 A 时写入空字符串；选择 B 时写入“当前不清楚”；选择 C 时写入“继承需求，参考以往文档”并继续询问具体参考；自定义答案按确认内容写入。
 5. 如果明显需要流程图、时序图、接口表、参数表或边界值表，在对应正文追加 `【建议加入表格/图片辅助说明】`。
-6. 在执行生成前，使用 `question` 汇总展示待确认项并取得用户确认。
-7. 仓库不提交 DOCX/XLSX 二进制模板。先检查 Python 依赖；缺失时征得用户同意后，通过 `bash` 安装 `$SKILL_DIR/requirements.txt`。首次使用或资产缺失时，在本地创建模板，再生成文档：
+6. 在执行生成前，执行 `references/template-fields.md` 的字段审计，再使用 `question` 汇总展示字段映射、待确认项并取得用户确认。
+7. 仓库不提交 DOCX/XLSX 二进制模板。先检查 Python 依赖；缺失时征得用户同意后，通过 `bash` 安装 `$SKILL_DIR/requirements.txt`。首次使用或资产缺失时，在本地创建模板。生成脚本必须先把模板复制到 `result/`，然后只修改复制品，不得直接修改 `assets/` 中的模板：
 
 ```bash
 python "$SKILL_DIR/scripts/create_example_templates.py"
@@ -52,10 +53,12 @@ python "$SKILL_DIR/scripts/generate_documents.py" \
   --srs-template "$SKILL_DIR/assets/srs-template.docx" \
   --sd-template "$SKILL_DIR/assets/sd-template.docx" \
   --stc-template "$SKILL_DIR/assets/stc-template.xlsx" \
-  --output-dir output
+  --output-dir result
 ```
 
-8. 打开生成结果做最终检查：所有自动填入 DOCX 的文本必须为红色；不涉及的字段不得出现；STC 两个指定页签必须存在且统计公式/数值已刷新。
+省略 `--output-dir` 时默认输出到当前工作目录的 `result/`。不得把输出目录设置为 `assets/`。
+
+8. 打开 `result/` 中的生成结果做最终检查：所有自动填入 DOCX 的文本必须为红色；不涉及的字段不得出现；STC 两个指定页签必须存在且统计公式/数值已刷新；确认 `assets/` 中模板未发生变化。
 9. 向用户列出生成文件、仍为“当前不清楚”的问题、继承项引用以及建议补图/表的位置。
 
 ## 文档规则
@@ -71,6 +74,7 @@ python "$SKILL_DIR/scripts/generate_documents.py" \
 
 - `references/brainstorming.md`：逐步提问策略、SRS/SD/STC 检查点。
 - `references/template-fields.md`：DOCX 字段和 XLSX 列定义。
+- `references/docx-template-example.md`：可直接复制到 Word 的 SRS/SD docxtpl 变量、段落循环、条件块和修订表格示例。
 - `references/input-schema.json`：生成脚本输入示例及数据结构。
 - `requirements.txt`：文档生成脚本的 Python 依赖。
 - `scripts/create_example_templates.py`：创建可迁移字段的示例 DOCX/XLSX 模板。
