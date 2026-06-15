@@ -1,0 +1,4 @@
+# Office templates are generated locally because some PR/diff systems reject
+# binary DOCX/XLSX patches.
+*.docx
+*.xlsx
