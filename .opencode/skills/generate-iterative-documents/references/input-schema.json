@@ -1,0 +1,66 @@
+{
+  "iteration_name": "B240迭代",
+  "iteration_code": "B240",
+  "author": "张三",
+  "revision_date": "2026-06-15",
+  "revision_version": "V1.0",
+  "srs": {
+    "purpose": "本文档主要描述B240迭代中，需求示例所涉及的接口设计、软件功能、产品环境和设计约束。",
+    "scope": "描述UnionSV110中新功能需求示例，不涉及其他UDK需求。",
+    "overview": "新增示例接口能力。",
+    "software_functions": "提供示例能力。",
+    "design_constraints": "仅在支持的芯片版本且依赖ko已插入时可用。",
+    "performance_summary": "",
+    "quality_summary": "调用失败时不得泄漏资源。",
+    "testability_summary": "通过udk_dt_tool调用并检查返回值。"
+  },
+  "sd": {
+    "purpose": "本文档描述了UnionSV110 B240的UDK软件方案和详细设计，用于指导软件开发人员、测试人员进行开发测试工作。",
+    "scope": "描述UnionSV110中新功能需求示例，不涉及其他UDK需求。",
+    "software_functions": "实现并验证示例接口。"
+  },
+  "requirements": [
+    {
+      "title": "示例功能需求",
+      "ar": "AR000001",
+      "kind": "new",
+      "introduction": "提供示例能力。",
+      "input": "example_api(int value)，value范围为0至255。",
+      "processing": "校验参数后调用芯片接口。",
+      "output": "成功返回0；失败返回明确错误码。",
+      "external_dependencies": "依赖示例ko。",
+      "performance": "",
+      "quality": "失败路径释放资源。",
+      "testability": "dt函数为dt_example。",
+      "background": "现有版本缺少该能力。",
+      "detailed_design": "校验参数，调用芯片接口，转换并返回错误码。【建议加入流程图/图片辅助说明】",
+      "constraints": "仅支持目标芯片版本。",
+      "external_interface_link": "",
+      "test_cases": [
+        {
+          "id": "EXAMPLE-001",
+          "type": "功能用例",
+          "item": "合法参数调用",
+          "title": "验证合法参数下接口调用成功",
+          "priority": "H",
+          "precondition": "mami已纳管设备",
+          "input": "value输入合法范围内参数",
+          "steps": "./udk_dt_tool dt_example 1",
+          "expected": "接口返回0并产生期望输出",
+          "execution": "",
+          "remarks": "AR000001"
+        }
+      ]
+    }
+  ],
+  "revisions": [
+    {
+      "date": "2026-06-15",
+      "version": "V1.0",
+      "ar": "AR000001",
+      "section": "全文",
+      "description": "初始版本",
+      "author": "张三"
+    }
+  ]
+}
