@@ -24,6 +24,16 @@ def heading(doc, text, level=1):
     doc.add_heading(text, level=level)
 
 
+def control_paragraph(doc, expression):
+    red_run(doc.add_paragraph(), "{%p " + expression + " %}")
+
+
+def dynamic_heading(doc, prefix, variable, level):
+    p = doc.add_heading(level=level)
+    p.add_run(prefix)
+    red_run(p, "{{ " + variable + " }}")
+
+
 def header(doc, placeholder):
     section = doc.sections[0]
     p = section.header.paragraphs[0]
@@ -60,30 +70,34 @@ def make_srs(path):
     field(doc, "1.4 软件功能\n", "SOFTWARE_FUNCTIONS")
     field(doc, "1.5 设计约束\n", "DESIGN_CONSTRAINTS")
     heading(doc, "2 需求说明")
-    red_run(doc.add_paragraph(), "{% for req in requirements %}")
-    field(doc, "功能需求：", "req.title")
+    control_paragraph(doc, "for req in requirements")
+    dynamic_heading(doc, "功能需求：", "req.title", 2)
     field(doc, "AR号：", "req.ar")
     for label, key in [("介绍", "introduction"), ("输入", "input"), ("处理", "processing"),
                        ("输出", "output"), ("外部依赖", "external_dependencies"),
                        ("性能需求", "performance"), ("质量需求", "quality"),
                        ("可测试性", "testability")]:
-        red_run(doc.add_paragraph(), "{% if req." + key + " %}")
+        control_paragraph(doc, "if req." + key)
+        heading(doc, label, 3)
         field(doc, label + "：", "req." + key)
-        red_run(doc.add_paragraph(), "{% endif %}")
-    red_run(doc.add_paragraph(), "{% endfor %}")
+        control_paragraph(doc, "endif")
+    control_paragraph(doc, "endfor")
     heading(doc, "3 非功能需求")
     for label, key in [("3.1 性能需求", "PERFORMANCE_SUMMARY"), ("3.2 质量需求", "QUALITY_SUMMARY"),
                        ("3.3 可测试性", "TESTABILITY_SUMMARY")]:
+        control_paragraph(doc, "if " + key)
+        heading(doc, label, 2)
         field(doc, label + "\n", key)
+        control_paragraph(doc, "endif")
     heading(doc, "4 修订记录")
-    table = doc.add_table(rows=2, cols=4)
+    table = doc.add_table(rows=4, cols=4)
     for cell, text in zip(table.rows[0].cells, ["日期", "修订版本", "修改描述", "作者"]):
         cell.text = text
+    red_run(table.rows[1].cells[0].paragraphs[0], "{%tr for rev in revisions %}")
     vals = ["rev.date", "rev.version", "rev.description", "rev.author"]
-    red_run(table.rows[1].cells[0].paragraphs[0], "{% for rev in revisions %}{{ " + vals[0] + " }}")
-    for cell, val in zip(table.rows[1].cells[1:], vals[1:]):
+    for cell, val in zip(table.rows[2].cells, vals):
         red_run(cell.paragraphs[0], "{{ " + val + " }}")
-    red_run(table.rows[1].cells[-1].paragraphs[0], "{% endfor %}")
+    red_run(table.rows[3].cells[0].paragraphs[0], "{%tr endfor %}")
     doc.save(path)
 
 
@@ -97,26 +111,26 @@ def make_sd(path):
     field(doc, "1.2 范围\n", "SCOPE")
     field(doc, "1.3 软件功能\n", "SOFTWARE_FUNCTIONS")
     heading(doc, "3 需求详细设计")
-    red_run(doc.add_paragraph(), "{% for design in designs %}")
-    field(doc, "需求：", "design.title")
+    control_paragraph(doc, "for design in designs")
+    dynamic_heading(doc, "", "design.title", 2)
     field(doc, "AR号：", "design.ar")
     for label, key in [("背景", "background"), ("详细设计", "detailed_design"),
                        ("场景约束", "constraints"), ("对外接口描述", "external_interface_link")]:
-        red_run(doc.add_paragraph(), "{% if design." + key + " %}")
+        control_paragraph(doc, "if design." + key)
         heading(doc, label, 3)
         red_run(doc.add_paragraph(), "{{ design." + key + " }}")
-        red_run(doc.add_paragraph(), "{% endif %}")
-    red_run(doc.add_paragraph(), "{% endfor %}")
+        control_paragraph(doc, "endif")
+    control_paragraph(doc, "endfor")
     heading(doc, "4 修订记录")
-    table = doc.add_table(rows=2, cols=6)
+    table = doc.add_table(rows=4, cols=6)
     labels = ["日期", "修订版本", "AR号", "修改章节", "修改描述", "作者"]
     for cell, text in zip(table.rows[0].cells, labels):
         cell.text = text
+    red_run(table.rows[1].cells[0].paragraphs[0], "{%tr for rev in revisions %}")
     vals = ["rev.date", "rev.version", "rev.ar", "rev.section", "rev.description", "rev.author"]
-    red_run(table.rows[1].cells[0].paragraphs[0], "{% for rev in revisions %}{{ " + vals[0] + " }}")
-    for cell, val in zip(table.rows[1].cells[1:], vals[1:]):
+    for cell, val in zip(table.rows[2].cells, vals):
         red_run(cell.paragraphs[0], "{{ " + val + " }}")
-    red_run(table.rows[1].cells[-1].paragraphs[0], "{% endfor %}")
+    red_run(table.rows[3].cells[0].paragraphs[0], "{%tr endfor %}")
     doc.save(path)
 
 

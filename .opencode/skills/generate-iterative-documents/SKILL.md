@@ -25,6 +25,7 @@ metadata:
 1. 先用 `glob` 定位当前已加载 skill 的 `SKILL.md`，其目录记为 `SKILL_DIR`。项目安装的标准位置是 `.opencode/skills/generate-iterative-documents`。
 2. 开始提问前必须用 `read` 读取字段语义契约，再按需读取其他资料：
    - `$SKILL_DIR/references/template-fields.md`
+   - `$SKILL_DIR/references/docx-template-example.md`（创建或迁移正式 DOCX 模板时读取）
    - `$SKILL_DIR/references/brainstorming.md`
    - `$SKILL_DIR/references/input-schema.json`
 3. 需要用户决策时调用 OpenCode 的 `question` 工具。每次只问一个主题；不要在普通文本中一次列出整套问卷。
@@ -71,6 +72,7 @@ python "$SKILL_DIR/scripts/generate_documents.py" \
 
 - `references/brainstorming.md`：逐步提问策略、SRS/SD/STC 检查点。
 - `references/template-fields.md`：DOCX 字段和 XLSX 列定义。
+- `references/docx-template-example.md`：可直接复制到 Word 的 SRS/SD docxtpl 变量、段落循环、条件块和修订表格示例。
 - `references/input-schema.json`：生成脚本输入示例及数据结构。
 - `requirements.txt`：文档生成脚本的 Python 依赖。
 - `scripts/create_example_templates.py`：创建可迁移字段的示例 DOCX/XLSX 模板。
