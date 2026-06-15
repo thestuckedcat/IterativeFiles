@@ -44,7 +44,7 @@ metadata:
 4. 选择 A 时写入空字符串；选择 B 时写入“当前不清楚”；选择 C 时写入“继承需求，参考以往文档”并继续询问具体参考；自定义答案按确认内容写入。
 5. 如果明显需要流程图、时序图、接口表、参数表或边界值表，在对应正文追加 `【建议加入表格/图片辅助说明】`。
 6. 在执行生成前，执行 `references/template-fields.md` 的字段审计，再使用 `question` 汇总展示字段映射、待确认项并取得用户确认。
-7. 仓库不提交 DOCX/XLSX 二进制模板。先检查 Python 依赖；缺失时征得用户同意后，通过 `bash` 安装 `$SKILL_DIR/requirements.txt`。首次使用或资产缺失时，在本地创建模板，再生成文档：
+7. 仓库不提交 DOCX/XLSX 二进制模板。先检查 Python 依赖；缺失时征得用户同意后，通过 `bash` 安装 `$SKILL_DIR/requirements.txt`。首次使用或资产缺失时，在本地创建模板。生成脚本必须先把模板复制到 `result/`，然后只修改复制品，不得直接修改 `assets/` 中的模板：
 
 ```bash
 python "$SKILL_DIR/scripts/create_example_templates.py"
@@ -53,10 +53,12 @@ python "$SKILL_DIR/scripts/generate_documents.py" \
   --srs-template "$SKILL_DIR/assets/srs-template.docx" \
   --sd-template "$SKILL_DIR/assets/sd-template.docx" \
   --stc-template "$SKILL_DIR/assets/stc-template.xlsx" \
-  --output-dir output
+  --output-dir result
 ```
 
-8. 打开生成结果做最终检查：所有自动填入 DOCX 的文本必须为红色；不涉及的字段不得出现；STC 两个指定页签必须存在且统计公式/数值已刷新。
+省略 `--output-dir` 时默认输出到当前工作目录的 `result/`。不得把输出目录设置为 `assets/`。
+
+8. 打开 `result/` 中的生成结果做最终检查：所有自动填入 DOCX 的文本必须为红色；不涉及的字段不得出现；STC 两个指定页签必须存在且统计公式/数值已刷新；确认 `assets/` 中模板未发生变化。
 9. 向用户列出生成文件、仍为“当前不清楚”的问题、继承项引用以及建议补图/表的位置。
 
 ## 文档规则

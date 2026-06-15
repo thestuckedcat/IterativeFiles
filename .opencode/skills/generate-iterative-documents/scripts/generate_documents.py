@@ -3,6 +3,7 @@
 import argparse
 import json
 import re
+import shutil
 from collections import Counter
 from pathlib import Path
 
@@ -121,7 +122,8 @@ def context(data, kind):
 
 
 def render_docx(template, output, values):
-    doc = DocxTemplate(template)
+    shutil.copy2(template, output)
+    doc = DocxTemplate(output)
     doc.render(values, autoescape=True)
     doc.save(output)
 
@@ -131,7 +133,8 @@ def safe_filename(value):
 
 
 def populate_stc(template, output, data):
-    wb = load_workbook(template)
+    shutil.copy2(template, output)
+    wb = load_workbook(output)
     required = {"统计", "缺陷记录&测试报告"}
     missing = required.difference(wb.sheetnames)
     if missing:
@@ -171,10 +174,18 @@ def main():
     parser.add_argument("--srs-template", required=True, type=Path)
     parser.add_argument("--sd-template", required=True, type=Path)
     parser.add_argument("--stc-template", required=True, type=Path)
-    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--output-dir", default=Path("result"), type=Path)
     args = parser.parse_args()
     data = json.loads(args.input.read_text(encoding="utf-8"))
     validate_data(data)
+    output_dir = args.output_dir.resolve()
+    template_dirs = {
+        args.srs_template.resolve().parent,
+        args.sd_template.resolve().parent,
+        args.stc_template.resolve().parent,
+    }
+    if output_dir in template_dirs:
+        raise ValueError("output directory must not be a template/assets directory; use result/")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stem = safe_filename(clean(data.get("iteration_code")) or clean(data.get("iteration_name")))
     outputs = {
