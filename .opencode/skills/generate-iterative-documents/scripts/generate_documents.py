@@ -135,11 +135,11 @@ def safe_filename(value):
 def populate_stc(template, output, data):
     shutil.copy2(template, output)
     wb = load_workbook(output)
-    required = {"统计", "缺陷记录&测试报告"}
+    required = {"统计", "测试用例"}
     missing = required.difference(wb.sheetnames)
     if missing:
         raise ValueError(f"STC template missing sheets: {', '.join(sorted(missing))}")
-    ws = wb["缺陷记录&测试报告"]
+    ws = wb["测试用例"]
     if ws.max_row > 1:
         ws.delete_rows(2, ws.max_row - 1)
     cases = []

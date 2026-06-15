@@ -47,7 +47,7 @@ Python 脚本只按 JSON 路径向模板变量赋值，不判断内容语义。A
 | `requirements[i].ar` → `req.ar` | 需求追踪编号 | 完整 AR 号 | 不自行编造 |
 | `requirements[i].introduction` → `req.introduction` | 单项需求背景简介 | 为什么需要、现状问题、目标价值、受影响模块 | 不写实现流程 |
 | `requirements[i].input` → `req.input` | 驱动边界处的输入/API 定义 | API 签名、参数、类型、方向、单位、合法范围、默认值，以及 LCNE/芯片边界输入 | 不写内部处理动作 |
-| `requirements[i].processing` → `req.processing` | 对外接口被调用后的可观察处理 | 前置校验、主要调用链、状态变化、同步/异步、失败处理的简要流程 | 不展开成 SD 级代码设计 |
+| `requirements[i].processing` → `req.processing` | 对外接口被调用后的可观察处理 | 以需求语言描述前置校验、行为顺序、状态结果、同步/异步和失败契约，使测试人员可从外部判定 | 不写内部函数拆分、锁实现或资源管理细节 |
 | `requirements[i].output` → `req.output` | 正常和异常时的对外结果 | 返回值、输出参数、事件、日志、状态、副作用和成功判据 | 不写测试操作 |
 | `requirements[i].external_dependencies` → `req.external_dependencies` | 功能成立所依赖的外部条件 | ko、固件、芯片版本、服务、配置、其他接口、初始化顺序 | 不写本模块内部函数 |
 | `requirements[i].performance` → `req.performance` | 当前 AR 的量化性能要求 | 时延、吞吐、并发、CPU/内存、满规格及时序 | 无量化要求时留空，不虚构数字 |
@@ -71,7 +71,7 @@ Python 脚本只按 JSON 路径向模板变量赋值，不判断内容语义。A
 | `requirements[i].title` → `design.title` | 设计项标题 | 与 SRS 同一需求标题 | 必须保持一致 |
 | `requirements[i].ar` → `design.ar` | AR 追踪编号 | 与 SRS 同一 AR | 必须保持一致 |
 | `requirements[i].background` → `design.background` | 设计所需的背景 | 影响方案理解的现状、架构背景、继承关系 | 可比 SRS 介绍更技术化 |
-| `requirements[i].detailed_design` → `design.detailed_design` | 功能实现方案 | 模块/函数职责、调用流程、状态或资源生命周期、错误转换、并发处理 | 比 SRS `processing` 更具体，但不臆造代码 |
+| `requirements[i].detailed_design` → `design.detailed_design` | 功能实现方案 | 模块/函数职责、调用流程、关键分支、状态或资源生命周期、错误转换、并发处理，以及经开发者确认的伪代码或等价结构化流程 | 必须足以指导编码并可追溯到 SRS，但不臆造接口、状态或算法 |
 | `requirements[i].constraints` → `design.constraints` | 接口使用和方案适用约束 | 芯片/版本、调用时机、前置状态、debug/release、并发与权限约束 | 说明“何时能用/不能用” |
 | `requirements[i].external_interface_link` → `design.external_interface_link` | 正式接口定义的位置 | 用户确认的文档链接、章节、代码或 API 规范引用 | 没有来源则留空，不生成假链接 |
 
@@ -90,7 +90,7 @@ Python 脚本只按 JSON 路径向模板变量赋值，不判断内容语义。A
 
 ## STC XLSX 字段
 
-`requirements[i].test_cases[]` 只写入 `缺陷记录&测试报告`；不进入 DOCX。
+`requirements[i].test_cases[]` 只写入 `测试用例` 页签；不进入 DOCX。
 
 | JSON 键 | XLSX 列 | 填写规则 |
 |---|---|---|
@@ -118,3 +118,5 @@ Agent 必须在调用脚本前完成以下检查：
 6. 所有性能数字、错误码、接口名、dt 函数和链接都有用户或已有材料依据。
 7. 测试用例的 `priority`、`type`、命令和预期结果可判定。
 8. 所有“当前不清楚”和继承引用已在最终确认中展示。
+9. 每个 AR 已向开发者展示并确认 SRS 候选内容、SD 候选内容和伪代码；伪代码能覆盖主流程、主要失败路径以及必要的回滚/资源清理。
+10. SRS 中的每条行为都有可观察结果或验收方式；SD 中的关键设计能追溯到 SRS，且不存在“按原逻辑”“正常处理”“失败返回错误”等未展开的实现空洞。
